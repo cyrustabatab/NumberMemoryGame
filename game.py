@@ -5,6 +5,7 @@ SCREEN_WIDTH = SCREEN_HEIGHT = 800
 FPS = 60
 BGCOLOR = (255,) * 3
 BGCOLOR = (30,144,255)
+WHITE = (255,255,255)
 BLACK = (0,) *3
 GREEN = (0,255,0)
 RED = (255,0,0)
@@ -19,11 +20,51 @@ pygame.display.set_caption("Number Memory Game")
 
 def game():
     
+    high_score_file_name = "high_scores.txt"
+    
+    with open(high_score_file_name,'r') as f:
+        high_scores = list(map(int,f.readlines()))
+
+
+    
+    def start_timer():
+
+        
+        SECOND_EVENT = pygame.USEREVENT + 1
+        
+        pygame.time.set_timer(SECOND_EVENT,1000)
+        index = 0
+        start_sound.play()
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == SECOND_EVENT:
+                    index += 1
+                    if index == len(starter_texts):
+                        pygame.time.set_timer(SECOND_EVENT,0)
+                        return
+
+
+            screen.fill(WHITE)
+
+            screen.blit(starter_texts[index],(SCREEN_WIDTH//2 - starter_texts[index].get_width()//2,SCREEN_HEIGHT//2 - starter_texts[index].get_height()//2))
+            pygame.display.update()
+
+
+
+
+
+
+    
     
     negative_sound = pygame.mixer.Sound("negative.wav")
     positive_sound = pygame.mixer.Sound("positive.wav")
     win_sound = pygame.mixer.Sound("win.mp3")
     lose_sound = pygame.mixer.Sound('Retro_No hope.ogg')
+    start_sound = pygame.mixer.Sound("racestart.wav")
+
 
 
 
@@ -31,11 +72,47 @@ def game():
         number = random.randint(0,9)
         number_text = number_font.render(str(number),True,BLACK)
         return number,number_text
+    
+
+    def write_to_high_score_file_if_needed(score):
+
+        if score > high_scores[-1]:
+            high_scores.pop()
+
+            high_scores.append(score)
+
+            high_scores.sort(reverse=True)
+
+
+            with open(high_score_file_name,'w') as f:
+                for score in high_scores:
+                    f.write(str(score) + '\n')
+
+
+
+
     font = pygame.font.SysFont("calibri",80)
     number_font = pygame.font.SysFont("calibri",200)
+    
 
+    font.set_bold(True)
     correct_text = font.render("CORRECT!",True,GREEN)
     incorrect_text = font.render("INCORRECT!",True,RED)
+
+
+
+
+    texts = ['READY!','SET!','GO!']
+    colors =[(255,0,0),(255,255,0),(0,255,0)]
+
+    starter_texts = []
+
+
+    for text,color in zip(texts,colors):
+        text = font.render(text,True,color)
+        starter_texts.append(text)
+
+    font.set_bold(False)
 
     number,number_text = generate_new_number_and_text()
     numbers = [number]
@@ -45,7 +122,6 @@ def game():
     user_answer = ''
     gap = 50
 
-    start_time = time.time()
     enter_start_time = gap_start =  None
 
     user_entered_length = 0
@@ -54,9 +130,12 @@ def game():
 
     number_enter_text = font.render("NUMBER 1",True,BLACK)
     result_text =result_start_time =  None
-        
-    length_text = font.render(f"LENGTH: {str(length)}",True,BLACK)
-
+    
+    smaller_font = pygame.font.SysFont("calibri",40)
+    length_text = smaller_font.render(f"LENGTH: {str(length)}",True,BLACK)
+    high_scores_text = smaller_font.render(f"HIGH SCORE: {str(high_scores[0])}",True,BLACK)
+    start_timer()
+    start_time = time.time()
     while True:
         
         current_time = time.time()
@@ -126,15 +205,19 @@ def game():
             number,number_text = generate_new_number_and_text()
             user_entered_length = 0
             numbers = [number]
+            if incorrect:
+                write_to_high_score_file_if_needed(length)
             length = length + 1 if not incorrect else 1
-            incorrect = False
             number_enter_text = font.render(f"NUMBER 1",True,BLACK)
             user_answer = None
-            length_text = font.render(f"LENGTH: {str(length)}",True,BLACK)
+            length_text = smaller_font.render(f"LENGTH: {str(length)}",True,BLACK)
             current_length = 1
-            start_time = time.time()
             result_start_time = None
             result_text = None
+            if incorrect:
+                incorrect = False
+                start_timer()
+            start_time = time.time()
 
 
         if not start_time and not gap_start:
@@ -145,6 +228,7 @@ def game():
             screen.blit(result_text,(SCREEN_WIDTH//2 - result_text.get_width()//2,gap * 2))
         
         screen.blit(length_text,(0,0))
+        screen.blit(high_scores_text,(SCREEN_WIDTH - high_scores_text.get_width(),0))
         pygame.display.update() 
         clock.tick(FPS)
 
