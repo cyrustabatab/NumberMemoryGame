@@ -47,7 +47,7 @@ def game():
                         return
 
 
-            screen.fill(WHITE)
+            screen.fill(BGCOLOR)
 
             screen.blit(starter_texts[index],(SCREEN_WIDTH//2 - starter_texts[index].get_width()//2,SCREEN_HEIGHT//2 - starter_texts[index].get_height()//2))
             pygame.display.update()
