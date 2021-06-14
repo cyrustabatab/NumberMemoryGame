@@ -233,7 +233,44 @@ def game():
         clock.tick(FPS)
 
 
+def menu():
+
+
+    title_font = pygame.font.SysFont("calibri",100,bold=True)
+
+    title_text = title_font.render("NUMMEM",True,BLACK)
+    top_gap = 50
+    title_rect = title_text.get_rect(center=(SCREEN_WIDTH//2,top_gap + title_text.get_height()//2))
+
+
+
+
+    while True:
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    game()
+        
+        screen.fill(WHITE)
+        
+        screen.blit(title_text,title_rect)
+        pygame.display.update()
+
+        
+
+
+
+
+
+
+
+
 if __name__ == "__main__":
     
-    game()
+    menu()
+    #game()
 
