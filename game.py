@@ -1,4 +1,4 @@
-import pygame,sys,random,time
+import pygame,sys,random,time,string
 pygame.init()
 
 SCREEN_WIDTH = SCREEN_HEIGHT = 800
@@ -73,14 +73,20 @@ class Button(pygame.sprite.Sprite):
 
 
 
-def game():
+def game(game_mode):
     
     high_score_file_name = "high_scores.txt"
     
     with open(high_score_file_name,'r') as f:
         high_scores = list(map(int,f.readlines()))
+    
+    DOMAIN = {0: string.digits,1: string.ascii_uppercase,2: string.digits + string.ascii_uppercase}
+
+    domain = DOMAIN[game_mode]
 
 
+    prompt = "NUMBER" if game_mode == 0 else "LETTER" if game_mode == 1 else "CHARACTER"
+     
     
     def start_timer():
 
@@ -109,8 +115,7 @@ def game():
 
 
 
-
-
+            
 
     
     
@@ -121,10 +126,10 @@ def game():
     start_sound = pygame.mixer.Sound("racestart.wav")
 
 
-
+    print(domain)
 
     def generate_new_number_and_text():
-        number = random.randint(0,9)
+        number = random.choice(domain)
         number_text = number_font.render(str(number),True,BLACK)
         return number,number_text
     
@@ -183,12 +188,15 @@ def game():
     incorrect = False
     
 
-    number_enter_text = font.render("NUMBER 1",True,BLACK)
+    number_enter_text = font.render(f"{prompt} 1",True,BLACK)
     result_text =result_start_time =  None
     
     smaller_font = pygame.font.SysFont("calibri",40)
-    length_text = smaller_font.render(f"LENGTH: {str(length)}",True,BLACK)
+    length_text = smaller_font.render(f"SCORE: {str(length - 1)}",True,BLACK)
     high_scores_text = smaller_font.render(f"HIGH SCORE: {str(high_scores[0])}",True,BLACK)
+
+
+    length_text_2 = smaller_font.render(f"LENGTH: {str(length)}",True,BLACK)
     game_over_text = font.render("GAME OVER",True,BLACK)
     
 
@@ -217,14 +225,18 @@ def game():
                 sys.exit()
             elif not start_time and not gap_start and event.type == pygame.KEYDOWN:
                 if not game_over:
-                    if not user_answer and not enter_start_time and pygame.K_0 <= event.key <= pygame.K_9:
-                        user_answer = chr(event.key)
+                    try:
+                        char = chr(event.key).upper()
+                    except:
+                        continue
+                    if not user_answer and not enter_start_time and char in domain:
+                        user_answer = char
                         user_answer_text = font.render(user_answer,True,BLACK)
                     elif user_answer and not enter_start_time and not result_start_time:
                         if event.key == pygame.K_BACKSPACE:
                             user_answer = None
                         elif event.key == pygame.K_RETURN:
-                            answer = int(user_answer)
+                            answer = user_answer
             
 
                             user_answer_text = font.render(user_answer,True,GREEN if answer == numbers[user_entered_length] else RED)
@@ -294,7 +306,7 @@ def game():
                 screen.blit(number_text,(SCREEN_WIDTH//2 - number_text.get_width()//2,SCREEN_HEIGHT//2 - number_text.get_height()//2))
             elif enter_start_time and current_time - enter_start_time >= 0.5:
                 if user_entered_length < len(numbers):
-                    number_enter_text = font.render(f"NUMBER {user_entered_length + 1}",True,BLACK)
+                    number_enter_text = font.render(f"{prompt} {user_entered_length + 1}",True,BLACK)
                     enter_start_time = None
                     user_answer = ''
             elif result_start_time and current_time - result_start_time >= 3:
@@ -303,15 +315,15 @@ def game():
                 numbers = [number]
                 enter_start_time = None
                 if incorrect:
-                    write_to_high_score_file_if_needed(length)
+                    write_to_high_score_file_if_needed(length - 1)
                     game_over = True
-                    final_score_text = font.render(f"SCORE: {str(length)}",True,BLACK)
+                    final_score_text = font.render(f"SCORE: {str(length - 1)}",True,BLACK)
                 else:
                     start_time = time.time()
                 length = length + 1 if not incorrect else 1
-                number_enter_text = font.render(f"NUMBER 1",True,BLACK)
+                number_enter_text = font.render(f"{prompt} 1",True,BLACK)
                 user_answer = None
-                length_text = smaller_font.render(f"LENGTH: {str(length)}",True,BLACK)
+                length_text = smaller_font.render(f"SCORE: {str(length - 1)}",True,BLACK)
                 current_length = 1
                 result_start_time = None
                 result_text = None
@@ -323,6 +335,9 @@ def game():
                 screen.blit(number_enter_text,(SCREEN_WIDTH//2 - number_enter_text.get_width()//2,SCREEN_HEIGHT - 4* gap))
             if result_text:
                 screen.blit(result_text,(SCREEN_WIDTH//2 - result_text.get_width()//2,gap * 2))
+
+            length_text_2 = smaller_font.render(f"LENGTH: {str(length)}",True,BLACK)
+            screen.blit(length_text_2,(SCREEN_WIDTH//2 - length_text_2.get_width()//2,SCREEN_HEIGHT - 6 * gap))
         else: 
             point = pygame.mouse.get_pos()
             buttons.update(point)
@@ -355,6 +370,46 @@ def menu():
 
     buttons = pygame.sprite.Group(start_button,high_scores_button)
 
+    mode_texts = ('NUMBERS','LETTERS','NUMBERS + LETTERS')
+    
+
+    mode_font = pygame.font.SysFont("calibri",50,bold=True)
+    width = mode_font.render(mode_texts[-1],True,BLACK).get_width()
+    mode_buttons = pygame.sprite.Group() 
+    gap = (SCREEN_HEIGHT - (len(mode_texts) * button_height  + (len(mode_texts) - 1) * top_gap))//2
+    button_width = width + 20
+    for i,mode_text in enumerate(mode_texts):
+        button = Button(SCREEN_WIDTH//2 - button_width//2,gap + i * (button_height + top_gap),button_width,button_height,mode_text,BLACK,RED,mode_font)
+        mode_buttons.add(button)
+
+    mode_title = title_font.render("MODE",True,BLACK)
+
+    
+
+    def mode():
+
+
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    point = pygame.mouse.get_pos()
+                    for i,button in enumerate(buttons):
+                        if button.collided_on(point):
+                            return i
+
+            point = pygame.mouse.get_pos() 
+            mode_buttons.update(point)
+
+
+            screen.fill(BGCOLOR)
+            screen.blit(mode_title,(SCREEN_WIDTH//2 - mode_title.get_width()//2,top_gap))
+            mode_buttons.draw(screen)
+            pygame.display.update()
+
 
 
     while True:
@@ -373,14 +428,15 @@ def menu():
                 for i,button in enumerate(buttons):
                     if button.collided_on(point):
                         if i == 0:
-                            game()
+                            game_mode = mode()
+                            game(game_mode)
 
 
                 
         
         point = pygame.mouse.get_pos()
         buttons.update(point)
-        screen.fill(WHITE)
+        screen.fill(BGCOLOR)
         
             
         buttons.draw(screen)
