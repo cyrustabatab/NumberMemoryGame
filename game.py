@@ -75,8 +75,9 @@ class Button(pygame.sprite.Sprite):
 
 def game(game_mode):
     
-    high_score_file_name = "high_scores.txt"
     
+    prompt,high_score_file_name = ("NUMBER","numbers_high_score.txt") if game_mode == 0 else ("LETTER","letters_high_score.txt") if game_mode == 1 else ("CHARACTER","characters_high_score.txt")
+
     with open(high_score_file_name,'r') as f:
         high_scores = list(map(int,f.readlines()))
     
@@ -85,7 +86,6 @@ def game(game_mode):
     domain = DOMAIN[game_mode]
 
 
-    prompt = "NUMBER" if game_mode == 0 else "LETTER" if game_mode == 1 else "CHARACTER"
      
     
     def start_timer():
@@ -316,6 +316,7 @@ def game(game_mode):
                 enter_start_time = None
                 if incorrect:
                     write_to_high_score_file_if_needed(length - 1)
+                    high_scores_text = smaller_font.render(f"HIGH SCORE: {str(high_scores[0])}",True,BLACK)
                     game_over = True
                     final_score_text = font.render(f"SCORE: {str(length - 1)}",True,BLACK)
                 else:
@@ -349,6 +350,46 @@ def game(game_mode):
         pygame.display.update() 
         clock.tick(FPS)
 
+def mode():
+
+    title_font = pygame.font.SysFont("calibri",100,bold=True)
+    
+    button_height = 100
+    top_gap = 50
+    mode_texts = ('NUMBERS','LETTERS','NUMBERS + LETTERS')
+    mode_font = pygame.font.SysFont("calibri",50,bold=True)
+    width = mode_font.render(mode_texts[-1],True,BLACK).get_width()
+    mode_buttons = pygame.sprite.Group() 
+    gap = (SCREEN_HEIGHT - (len(mode_texts) * button_height  + (len(mode_texts) - 1) * top_gap))//2
+    button_width = width + 20
+    for i,mode_text in enumerate(mode_texts):
+        button = Button(SCREEN_WIDTH//2 - button_width//2,gap + i * (button_height + top_gap),button_width,button_height,mode_text,BLACK,RED,mode_font)
+        mode_buttons.add(button)
+
+    mode_title = title_font.render("MODE",True,BLACK)
+
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                point = pygame.mouse.get_pos()
+                for i,button in enumerate(mode_buttons):
+                    if button.collided_on(point):
+                        return i
+
+        point = pygame.mouse.get_pos() 
+        mode_buttons.update(point)
+
+
+        screen.fill(BGCOLOR)
+        screen.blit(mode_title,(SCREEN_WIDTH//2 - mode_title.get_width()//2,top_gap))
+        mode_buttons.draw(screen)
+        pygame.display.update()
+
+
 
 def menu():
 
@@ -370,46 +411,9 @@ def menu():
 
     buttons = pygame.sprite.Group(start_button,high_scores_button)
 
-    mode_texts = ('NUMBERS','LETTERS','NUMBERS + LETTERS')
     
 
-    mode_font = pygame.font.SysFont("calibri",50,bold=True)
-    width = mode_font.render(mode_texts[-1],True,BLACK).get_width()
-    mode_buttons = pygame.sprite.Group() 
-    gap = (SCREEN_HEIGHT - (len(mode_texts) * button_height  + (len(mode_texts) - 1) * top_gap))//2
-    button_width = width + 20
-    for i,mode_text in enumerate(mode_texts):
-        button = Button(SCREEN_WIDTH//2 - button_width//2,gap + i * (button_height + top_gap),button_width,button_height,mode_text,BLACK,RED,mode_font)
-        mode_buttons.add(button)
-
-    mode_title = title_font.render("MODE",True,BLACK)
-
     
-
-    def mode():
-
-
-
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    point = pygame.mouse.get_pos()
-                    for i,button in enumerate(buttons):
-                        if button.collided_on(point):
-                            return i
-
-            point = pygame.mouse.get_pos() 
-            mode_buttons.update(point)
-
-
-            screen.fill(BGCOLOR)
-            screen.blit(mode_title,(SCREEN_WIDTH//2 - mode_title.get_width()//2,top_gap))
-            mode_buttons.draw(screen)
-            pygame.display.update()
-
 
 
     while True:
@@ -427,8 +431,8 @@ def menu():
 
                 for i,button in enumerate(buttons):
                     if button.collided_on(point):
+                        game_mode = mode()
                         if i == 0:
-                            game_mode = mode()
                             game(game_mode)
 
 
