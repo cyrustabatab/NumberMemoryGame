@@ -1,6 +1,9 @@
 import pygame,sys,random,time,string
 pygame.init()
 
+from spritesheet import load_images
+from light import TrafficLight
+
 SCREEN_WIDTH = SCREEN_HEIGHT = 800
 FPS = 60
 BGCOLOR = (255,) * 3
@@ -57,7 +60,6 @@ class Button(pygame.sprite.Sprite):
 
 
         return self.rect.collidepoint(point)
-
 
 
 
@@ -412,6 +414,7 @@ def menu():
     buttons = pygame.sprite.Group(start_button,high_scores_button)
 
     
+    trafficlight = pygame.sprite.GroupSingle(TrafficLight(200,100,200)) # arbitrary numbers
 
     
 
@@ -444,6 +447,7 @@ def menu():
         
             
         buttons.draw(screen)
+        trafficlight.draw(screen)
         screen.blit(title_text,title_rect)
         pygame.display.update()
 
