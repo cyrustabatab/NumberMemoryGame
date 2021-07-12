@@ -95,6 +95,8 @@ def game(game_mode):
         
         SECOND_EVENT = pygame.USEREVENT + 1
         
+
+        trafficlight = pygame.sprite.GroupSingle(TrafficLight(300,SCREEN_WIDTH,SCREEN_HEIGHT)) 
         pygame.time.set_timer(SECOND_EVENT,1000)
         index = 0
         start_sound.play()
@@ -104,15 +106,17 @@ def game(game_mode):
                     pygame.quit()
                     sys.exit()
                 if event.type == SECOND_EVENT:
+                    trafficlight.update()
                     index += 1
-                    if index == len(starter_texts):
+                    if index == 3:
                         pygame.time.set_timer(SECOND_EVENT,0)
                         return
 
 
             screen.fill(BGCOLOR)
 
-            screen.blit(starter_texts[index],(SCREEN_WIDTH//2 - starter_texts[index].get_width()//2,SCREEN_HEIGHT//2 - starter_texts[index].get_height()//2))
+            #screen.blit(starter_texts[index],(SCREEN_WIDTH//2 - starter_texts[index].get_width()//2,SCREEN_HEIGHT//2 - starter_texts[index].get_height()//2))
+            trafficlight.draw(screen)
             pygame.display.update()
 
 
@@ -414,7 +418,7 @@ def menu():
     buttons = pygame.sprite.Group(start_button,high_scores_button)
 
     
-    trafficlight = pygame.sprite.GroupSingle(TrafficLight(200,100,200)) # arbitrary numbers
+    #trafficlight = pygame.sprite.GroupSingle(TrafficLight(200,100,200)) # arbitrary numbers
 
     
 
@@ -447,7 +451,6 @@ def menu():
         
             
         buttons.draw(screen)
-        trafficlight.draw(screen)
         screen.blit(title_text,title_rect)
         pygame.display.update()
 
